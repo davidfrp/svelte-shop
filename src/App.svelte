@@ -3,21 +3,20 @@
     import Frontpage from "./routes/Frontpage.svelte";
     import Signin from "./routes/Login.svelte";
     import Signup from "./routes/Register.svelte";
+    import Navbar from "./components/Navbar.svelte";
 </script>
 
 <Router>
-    <nav>
-        <Link to="/">Products</Link>
-        <Link to="/login">Log in</Link>
-        <Link to="/register">Register</Link>
-    </nav>
-    <Route path="/">
+    <Navbar />
+    <main>
+        <Route path="/">
         <Frontpage />
-    </Route>
-    <Route path="/login">
-        <Signin />
-    </Route>
-    <Route path="/register">
-        <Signup />
-    </Route>
+        </Route>
+        <Route path="/login">
+            <Signin />
+        </Route>
+        <Route path="/register">
+            <Signup />
+        </Route>
+    </main>
 </Router>
