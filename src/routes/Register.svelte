@@ -16,18 +16,23 @@
     $: isValid = isEmailValid && isUsernameValid && isPasswordValid && isPasswordConfirmValid;
 
     let existingUsername, existingEmail;
+    let hasBeenSubmitted;
 
     const handleSubmit = async () => {
-        const response = await registerUser(email, username, password);
-        
-        if (response.status === 204) {
-            navigate("/profile", { replace: true });
-        } else {
-            const data = await response.json();
-            if (data?.code === "USERNAME_TAKEN") {
-                existingUsername = username;
-            } else if (data?.code === "EMAIL_ALREADY_REGISTERED") {
-                existingEmail = email;
+        hasBeenSubmitted = true;
+
+        if (isValid) {
+            const response = await registerUser(email, username, password);
+            
+            if (response.status === 204) {
+                navigate("/profile", { replace: true });
+            } else {
+                const data = await response.json();
+                if (data?.code === "USERNAME_TAKEN") {
+                    existingUsername = username;
+                } else if (data?.code === "EMAIL_ALREADY_REGISTERED") {
+                    existingEmail = email;
+                }
             }
         }
     };
@@ -37,8 +42,13 @@
     <h1>Create an account</h1>
     <TextInput 
         validation={[{
-            state: /^\S+@\S+\.\S+$/.test(email),
-            errorMessage: "Email is not well formed."
+            state: /^\S+@\S+\.\S+$/.test(email) || email?.length === 0,
+            errorMessage: "Email is not well formed.",
+            ignorePristine: hasBeenSubmitted
+        },{
+            state: email?.length > 0,
+            errorMessage: "We don't know who you are... yet... Please enter your email.",
+            ignorePristine: hasBeenSubmitted
         },{
             state: email !== existingEmail,
             errorMessage: "Email is already registered."
@@ -50,7 +60,8 @@
     <TextInput 
         validation={[{
             state: username?.length >= 2 && username?.length <= 32,
-            errorMessage: "Usernames must be between 2 and 32 characters long."
+            errorMessage: "Usernames must be between 2 and 32 characters long.",
+            ignorePristine: hasBeenSubmitted
         },{
             state: username !== existingUsername,
             errorMessage: "Username is already taken."
@@ -63,13 +74,28 @@
     <TextInput 
         isPassword 
         validation={[{
-            state: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\w\W]{8,}$/.test(password),
-            errorMessage: "Use at least one uppercase letter, one lowercase letter, and one number."
+            state: password?.length > 0,
+            errorMessage: "You will need a password to log in.",
+            ignorePristine: hasBeenSubmitted
         },{
-            state: password?.length >= 8,
-            errorMessage: "Use 8 or more characters."
+            state: /[A-Z]/.test(password) || password?.length === 0,
+            errorMessage: "Use 1 or more uppercase letters.",
+            ignorePristine: hasBeenSubmitted
+        },{
+            state: /[a-z]/.test(password) || password?.length === 0,
+            errorMessage: "Use 1 or more lowercase letters.",
+            ignorePristine: hasBeenSubmitted
+        },{
+            state: /\d/.test(password) || password?.length === 0,
+            errorMessage: "Use 1 or more numbers.",
+            ignorePristine: hasBeenSubmitted
+        },{
+            state: password?.length >= 8 || password?.length === 0,
+            errorMessage: "Use 8 or more characters.",
+            ignorePristine: hasBeenSubmitted
         }]}
         onValidityChanged={(value) => isPasswordValid = value}
+        autoComplete="new-password"
         id="password"
         label="Password" 
         bind:value={password} />
@@ -77,12 +103,14 @@
         isPassword 
         validation={[{
             state: password === passwordConfirm,
-            errorMessage: "Passwords didn't match. Try again."
+            errorMessage: "Passwords don't match.",
+            ignorePristine: hasBeenSubmitted
         }]}
         onValidityChanged={(value) => isPasswordConfirmValid = value}
+        autoComplete="new-password"
         id="passwordConfirm" 
         label="Confirm password" 
         bind:value={passwordConfirm} />
-    <button disabled={!isValid}>Create account</button>
+    <button>Create account</button>
     <a href="/login">Already have an account?</a>
 </form>
