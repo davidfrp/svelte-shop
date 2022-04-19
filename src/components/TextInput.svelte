@@ -1,4 +1,6 @@
 <script>
+    import { slide } from 'svelte/transition';
+
     export let id;
     export let value = "";
     export let label = "";
@@ -14,9 +16,9 @@
     $: validationErrors = validation.filter(condition => !condition.state);
 
     $: isValid = validationErrors.length === 0;
-    $: onValidityChanged(isValid);
+    $: onValidityChanged(isValid); // Whenever isValid changes, call onValidityChanged.
 
-    let isPristine = true;
+    let isPristine = true; // When pristine, validation errors are not shown.
 </script>
 
 <div class="text-input-wrapper">
@@ -33,13 +35,21 @@
             {id} />
         <label for="{id}">{label}</label>
         {#if isPassword}
-            <button type="button" class="toggle-password" on:click={() => isPasswordShown = !isPasswordShown}>
+            <button 
+                type="button" 
+                class="toggle-password" 
+                on:click={() => isPasswordShown = !isPasswordShown}>
                 {isPasswordShown ? 'hide' : 'show'}
             </button>
         {/if}
     </div>
     {#each validationErrors as {errorMessage, ignorePristine}}
-        <p class="error-message" hidden={isPristine && !ignorePristine}>{errorMessage}</p>
+        <!-- Don't show errors when still pristine, unless we ignore it. -->
+        {#if !isPristine || ignorePristine}
+            <p class="error-message" transition:slide>
+                {errorMessage}
+            </p>
+        {/if}
     {/each}
 </div>
 
@@ -56,10 +66,6 @@
         margin-top: 0;
     }
 
-    .pristine {
-        background-color: #e40730;
-    }
-
     .error-message {
         color: #e40730;
         font-weight: 500;
@@ -70,23 +76,21 @@
     input {
         margin: 0;
         font-size: inherit;
-        /* padding: 1em 0.4em 0.2em; */
         padding: 1.2em 0.8em 0.4em;
         border: 1px solid #ccc;
         width: 100%;
     }
 
     input + label {
-        color: #484848;
+        color: #5d5d5d;
         font-size: inherit;
         user-select: none;
         pointer-events: none;
+        position: absolute;
+        left: calc(0.8em + 1px);
+        top: calc(50% - 0.75em);
         transition: transform 0.2s ease-in-out;
         transform-origin: 0 0;
-        position: absolute;
-        /* top: calc(50% - 1em); */
-        top: calc(50% - 0.75em);
-        left: calc(0.8em + 1px);
     }
 
     input:not(:placeholder-shown) + label, input:focus + label {
